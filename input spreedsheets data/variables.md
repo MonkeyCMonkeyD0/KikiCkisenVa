@@ -1,10 +1,10 @@
-https://www.kaggle.com/colearninglounge/employee-attrition?select=employee_attrition_train.csv
-AGE Numerical Value
-ATTRITION Employee leaving the company (0=no, 1=yes)
-BUSINESS TRAVEL (1=No Travel, 2=Travel Frequently, 3=Travel Rarely)
-DAILY RATE Numerical Value - Salary Level
-DEPARTMENT (1=HR, 2=R&D, 3=Sales)
-DISTANCE FROM HOME Numerical Value - THE DISTANCE FROM WORK TO HOME
+https://www.kaggle.com/colearninglounge/employee-attrition?select=employee_attrition_train.csv  
+AGE Numerical Value  
+ATTRITION Employee leaving the company (0=no, 1=yes)  
+BUSINESS TRAVEL (1=No Travel, 2=Travel Frequently, 3=Travel Rarely)  
+DAILY RATE Numerical Value - Salary Level  
+DEPARTMENT (1=HR, 2=R&D, 3=Sales)  
+DISTANCE FROM HOME Numerical Value - THE DISTANCE FROM WORK TO HOME  
 EDUCATION Numerical Value. (1 'Below College' 2 'College' 3 'Bachelor' 4 'Master' 5 'Doctor')
 EDUCATION FIELD (1=HR, 2=LIFE SCIENCES, 3=MARKETING, 4=MEDICAL SCIENCES, 5=OTHERS, 6= TECHNICAL)
 EMPLOYEE NUMBER Numerical Value - EMPLOYEE ID
