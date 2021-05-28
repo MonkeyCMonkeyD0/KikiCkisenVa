@@ -1,0 +1,66 @@
+---
+title: "Projet - Analyse"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+df <- read.csv("input spreedsheets data/jeupropre.csv", header = TRUE)
+```
+
+```{r}
+df
+```
+
+```{r}
+test <- df
+```
+
+```{r}
+rownames(test) <- test[, 1]  ## set rownames
+test <- test[, -1]           ## remove the index variable
+```
+
+```{r}
+df <- test
+```
+
+```{r}
+library(FactoMineR)
+res <- PCA(df[-1], graph = FALSE)
+```
+
+```{r}
+plot(res, choix="var")
+plot(res, choix="ind", select=FALSE, unselect=0, cex=0.7)
+```
+
+```{r}
+res$eig   
+```
+
+```{r}
+barplot(res$eig[,2])
+```
+#Le 4eme axe semble a moins d'inertie que les autres, on pourrait ne pas le garder ?
+
+```{r}
+plot(res, select="contrib 10", choix="ind") #les 10 points qui contribuent le plus au graph
+```
+
+```{r}
+res$var$cos2
+```
+toutes assez bien représentée dans un axe sauf les adultes non assurés
+
+```{r}
+res$var$contrib 
+```
+
+```{r}
+summary(res)
+```
+
