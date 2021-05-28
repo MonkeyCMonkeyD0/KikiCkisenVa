@@ -3,64 +3,71 @@ title: "Projet - Analyse"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+# Projet KikiCkisenVa - Analyse
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
+\section{Recuperation des donnees}
 ```{r}
-df <- read.csv("input spreedsheets data/jeupropre.csv", header = TRUE)
+data_train <- read.csv("spreedsheets/data_train.csv", header = TRUE)
+data_train <-na.omit(data_train)
+dim(data_train)
+head(data_train)
+```
+```{r}
+data_train_num <- data_train[, unlist(lapply(data_train, is.numeric))]
+data_train_num[26] <- data_train["Attrition"]
+dim(data_train_num)
+head(data_train_num)
 ```
 
+\section{Stats descriptives}
 ```{r}
-df
+chisq.test(data_train_num[-26])
 ```
+Toutes les variables ne semblent pas indépentantes entre elles.
 
-```{r}
-test <- df
-```
 
-```{r}
-rownames(test) <- test[, 1]  ## set rownames
-test <- test[, -1]           ## remove the index variable
-```
 
-```{r}
-df <- test
-```
 
+\section{ACP}
 ```{r}
 library(FactoMineR)
-res <- PCA(df[-1], graph = FALSE)
+res <- PCA(data_train_num, scale.unit = TRUE, graph = FALSE, quali.sup = 26)
+plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
+plot(res, choix = "var", cex = 0.8)
 ```
 
+\subsection{Equilibrage des Donnees}
 ```{r}
-plot(res, choix="var")
-plot(res, choix="ind", select=FALSE, unselect=0, cex=0.7)
+data_train_log <- log(data_train_num[,-26])
+data_train_log[data_train_log == -Inf] <- 0
+data_train_log <- t(scale(t(data_train_log)))
+data_train_log <- as.data.frame(data_train_log)
+data_train_log[26] <- data_train["Attrition"]
+
+head(data_train_log)
+```
+```{r}
+res <- PCA(data_train_log, scale.unit = TRUE, graph = FALSE, quali.sup = 26)
+plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
+plot(res, choix = "var", cex = 0.7)
 ```
 
+\subsection
 ```{r}
-res$eig   
+plot(res, select="cos2 0.7", choix="ind", habillage = 26)
+plot(res, select="contrib 5", choix="ind", habillage = 26)
 ```
-
 ```{r}
+res$eig
 barplot(res$eig[,2])
 ```
-#Le 4eme axe semble a moins d'inertie que les autres, on pourrait ne pas le garder ?
 
-```{r}
-plot(res, select="contrib 10", choix="ind") #les 10 points qui contribuent le plus au graph
-```
 
-```{r}
-res$var$cos2
-```
-toutes assez bien représentée dans un axe sauf les adultes non assurés
 
-```{r}
-res$var$contrib 
-```
 
-```{r}
-summary(res)
-```
+
+
+
+
+
 
