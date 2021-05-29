@@ -1,7 +1,14 @@
 ---
-title: "Projet - Prediction"
+title: "Projet - Analyse de Donnees"
 output: html_notebook
 ---
 
 # Projet KikiCkisenVa - Prediction
 
+\section{Recuperation des donnees}
+```{r}
+data_test <- read.csv2("spreedsheets/data_test.csv", sep = ",")
+data_test <- na.omit(data_test)
+dim(data_test)
+head(data_test)
+```

@@ -1,5 +1,5 @@
 ---
-title: "Projet - Analyse"
+title: "Projet - Analyse de Donnees"
 output: html_notebook
 ---
 
@@ -7,8 +7,8 @@ output: html_notebook
 
 \section{Recuperation des donnees}
 ```{r}
-data_train <- read.csv("spreedsheets/data_train.csv", header = TRUE)
-data_train <-na.omit(data_train)
+data_train <- read.csv2("spreedsheets/data_train.csv", sep = ",")
+data_train <- na.omit(data_train)
 dim(data_train)
 head(data_train)
 ```
@@ -20,7 +20,7 @@ head(data_train_num)
 ```
 
 \section{Stats descriptives}
-```{r}
+```{r message=FALSE, warning=FALSE}
 chisq.test(data_train_num[-26])
 ```
 Toutes les variables ne semblent pas indépentantes entre elles.
@@ -35,6 +35,7 @@ res <- PCA(data_train_num, scale.unit = TRUE, graph = FALSE, quali.sup = 26)
 plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
 plot(res, choix = "var", cex = 0.8)
 ```
+On voit apparaitre un effet taille. Pour contrer cela nous allons transformer les données en appliquant
 
 \subsection{Equilibrage des Donnees}
 ```{r}
@@ -61,9 +62,33 @@ plot(res, select="contrib 5", choix="ind", habillage = 26)
 res$eig
 barplot(res$eig[,2])
 ```
+L'inertie de chaque composante en pourcentage. On remarque que les 2 premiers suffisent car les autres apportent moins de 10%...
 
+```{r message=FALSE, warning=FALSE}
+usefull_col <- (res$var$contrib[,1] > median(res$var$contrib[,1])) | (res$var$contrib[,2] > median(res$var$contrib[,2]))
+usefull_col
+```
 
+\section{AFC}
+```{r}
+data_train_fact <- data_train[, unlist(lapply(data_train, is.character))]
+dim(data_train_fact)
+head(data_train_fact)
+```
+```{r}
+library(FactoMineR)
+res = MCA(data_train_fact, graph = FALSE)
+barplot(res$eig[,2])
+plot(res, invisible = "ind", cex = 0.5)
+```
 
+```{r message=FALSE, warning=FALSE}
+attach(data_train)
+chisq.test(table(EducationField, JobRole))
+chisq.test(table(EducationField, Department))
+chisq.test(table(JobRole, Department))
+```
+On a une p-value < 0.05, les variables sont donc effectivement liées.
 
 
 
