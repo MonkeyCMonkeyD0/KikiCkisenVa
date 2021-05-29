@@ -1,14 +1,92 @@
 ---
-title: "Projet - Analyse de Donnees"
+title: "Projet - Analyse de Données"
 output: html_notebook
 ---
 
-# Projet KikiCkisenVa - Prediction
+# Projet KikiCkisenVa - Prédiction
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+fact.data <- function(data) {
+  if (!is.null(data$Attrition))
+    data$Attrition <- as.factor(data$Attrition)
+  data$BusinessTravel <- as.factor(data$BusinessTravel)
+  data$Department <- as.factor(data$Department)
+  data$Education <- as.factor(data$Education)
+  data$EducationField <- as.factor(data$EducationField)
+  data$EnvironmentSatisfaction <- as.factor(data$EnvironmentSatisfaction)
+  data$Gender <- as.factor(data$Gender)
+  data$JobInvolvement <- as.factor(data$JobInvolvement)
+  data$JobLevel <- as.factor(data$JobLevel)
+  data$JobRole <- as.factor(data$JobRole)
+  data$JobSatisfaction <- as.factor(data$JobSatisfaction)
+  data$MaritalStatus <- as.factor(data$MaritalStatus)
+  data$OverTime <- as.factor(data$OverTime)
+  data$PerformanceRating <- as.factor(data$PerformanceRating)
+  data$RelationshipSatisfaction <- as.factor(data$RelationshipSatisfaction)
+  data$StockOptionLevel <- as.factor(data$StockOptionLevel)
+  data$WorkLifeBalance <- as.factor(data$WorkLifeBalance)
+  return(data)
+}
+```
 
 \section{Recuperation des donnees}
 ```{r}
-data_test <- read.csv2("spreedsheets/data_test.csv", sep = ",")
+data_train <- read.csv2("spreadsheets/data_train.csv", sep = ",")
+data_train <- na.omit(data_train)
+data_train <- fact.data(data_train)
+dim(data_train)
+head(data_train)
+```
+```{r}
+data_test <- read.csv2("spreadsheets/data_test.csv", sep = ",")
 data_test <- na.omit(data_test)
+data_test <- fact.data(data_test)
 dim(data_test)
 head(data_test)
 ```
+```{r warning=FALSE}
+data_train_num <- data_train[, unlist(lapply(data_train, is.numeric))]
+data_train_num[16] <- data_train["Attrition"]
+dim(data_train_num)
+head(data_train_num)
+```
+```{r}
+data_test_num <- data_test[, unlist(lapply(data_test, is.numeric))]
+dim(data_test_num)
+head(data_test_num)
+```
+
+
+
+\section{AFD - LDA}
+```{r message=FALSE}
+library(MASS)
+
+a=seq(min(), max(X), length=100)
+b=seq(min(X), max(X), length=100)
+grille=NULL
+for (i in a) {grille=rbind(grille, cbind(i,b)) }
+
+res.afd.lda = lda(data_train_num[-16], grouping = data_train_num$Attrition)
+pred_grille_lda = predict(res.afd.lda, data.frame(grille))$class
+plot(grille, col = pred_grille_lda, cex = 0.2, main = "LDA")
+points(res.afd.lda$means, pch = 3, col = 1:2, lwd = 4)
+points(X, pch = as.numeric(Y), col = as.numeric(Y), lwd = 2)
+
+
+
+#res.qda = qda(data_train_num[-16], grouping = data_train_num$Attrition)
+#res.qda
+
+#pred.qda = predict(res.qda, data_test_num)
+#pred.qda
+```
+
+
+
+
+
+
+
+
+

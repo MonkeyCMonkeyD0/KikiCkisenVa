@@ -1,65 +1,88 @@
 ---
-title: "Projet - Analyse de Donnees"
+title: "Projet - Analyse de Données"
 output: html_notebook
 ---
 
 # Projet KikiCkisenVa - Analyse
 
+```{r message=FALSE, warning=FALSE}
+fact.data <- function(data) {
+  if (!is.null(data$Attrition))
+    data$Attrition <- as.factor(data$Attrition)
+  data$BusinessTravel <- as.factor(data$BusinessTravel)
+  data$Department <- as.factor(data$Department)
+  data$Education <- as.factor(data$Education)
+  data$EducationField <- as.factor(data$EducationField)
+  data$EnvironmentSatisfaction <- as.factor(data$EnvironmentSatisfaction)
+  data$Gender <- as.factor(data$Gender)
+  data$JobInvolvement <- as.factor(data$JobInvolvement)
+  data$JobLevel <- as.factor(data$JobLevel)
+  data$JobRole <- as.factor(data$JobRole)
+  data$JobSatisfaction <- as.factor(data$JobSatisfaction)
+  data$MaritalStatus <- as.factor(data$MaritalStatus)
+  data$OverTime <- as.factor(data$OverTime)
+  data$PerformanceRating <- as.factor(data$PerformanceRating)
+  data$RelationshipSatisfaction <- as.factor(data$RelationshipSatisfaction)
+  data$StockOptionLevel <- as.factor(data$StockOptionLevel)
+  data$WorkLifeBalance <- as.factor(data$WorkLifeBalance)
+  return(data)
+}
+```
+
 \section{Recuperation des donnees}
 ```{r}
-data_train <- read.csv2("spreedsheets/data_train.csv", sep = ",")
+data_train <- read.csv2("spreadsheets/data_train.csv", sep = ",")
 data_train <- na.omit(data_train)
+data_train <- fact.data(data_train)
 dim(data_train)
 head(data_train)
 ```
-```{r}
+```{r warning=FALSE}
 data_train_num <- data_train[, unlist(lapply(data_train, is.numeric))]
-data_train_num[26] <- data_train["Attrition"]
+data_train_num[16] <- data_train["Attrition"]
 dim(data_train_num)
 head(data_train_num)
 ```
 
 \section{Stats descriptives}
 ```{r message=FALSE, warning=FALSE}
-chisq.test(data_train_num[-26])
+chisq.test(data_train_num[-16])
 ```
 Toutes les variables ne semblent pas indépentantes entre elles.
-
-
 
 
 \section{ACP}
 ```{r}
 library(FactoMineR)
-res <- PCA(data_train_num, scale.unit = TRUE, graph = FALSE, quali.sup = 26)
-plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
-plot(res, choix = "var", cex = 0.8)
+res.pca <- PCA(data_train_num, scale.unit = TRUE, graph = FALSE, quali.sup = 16)
+plot(res.pca, choix = "ind", habillage = 16, select = FALSE, unselect = 0)
+plot(res.pca, choix = "var", cex = 0.7)
 ```
 On voit apparaitre un effet taille. Pour contrer cela nous allons transformer les données en appliquant
 
 \subsection{Equilibrage des Donnees}
 ```{r}
-data_train_log <- log(data_train_num[,-26])
+data_train_log <- log(data_train_num[,-16])
 data_train_log[data_train_log == -Inf] <- 0
 data_train_log <- t(scale(t(data_train_log)))
 data_train_log <- as.data.frame(data_train_log)
-data_train_log[26] <- data_train["Attrition"]
+data_train_log[16] <- data_train["Attrition"]
 
 head(data_train_log)
 ```
 ```{r}
-res <- PCA(data_train_log, scale.unit = TRUE, graph = FALSE, quali.sup = 26)
-plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
-plot(res, choix = "var", cex = 0.7)
+res.pca.log <- PCA(data_train_log, scale.unit = TRUE, graph = FALSE, quali.sup = 16)
+plot(res.pca.log, choix = "ind", habillage = 16, select = FALSE, unselect = 0)
+plot(res.pca.log, choix = "var", cex = 0.7)
 ```
 
 \subsection
 ```{r}
-plot(res, select="cos2 0.7", choix="ind", habillage = 26)
-plot(res, select="contrib 5", choix="ind", habillage = 26)
+plot(res.pca.log, select="cos2 0.82", choix="ind", habillage = 16)
+plot(res.pca.log, select="contrib 5", choix="ind", habillage = 16)
 ```
 ```{r}
-res$eig
+summary(res$eig)
 barplot(res$eig[,2])
 ```
 L'inertie de chaque composante en pourcentage. On remarque que les 2 premiers suffisent car les autres apportent moins de 10%...
@@ -71,15 +94,16 @@ usefull_col
 
 \section{AFC}
 ```{r}
-data_train_fact <- data_train[, unlist(lapply(data_train, is.character))]
+data_train_fact <- data_train[, unlist(lapply(data_train, is.factor))]
 dim(data_train_fact)
 head(data_train_fact)
 ```
-```{r}
+```{r warning=FALSE}
 library(FactoMineR)
-res = MCA(data_train_fact, graph = FALSE)
+res.mca = MCA(data_train_fact, graph = FALSE)
 barplot(res$eig[,2])
-plot(res, invisible = "ind", cex = 0.5)
+plot(res.mca, choix = "var", cex = 0.7)
+plot(res.mca, choix = "var", xlim = c(0, 0.05), ylim = c(0, 0.05), cex = 0.5)
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -90,8 +114,12 @@ chisq.test(table(JobRole, Department))
 ```
 On a une p-value < 0.05, les variables sont donc effectivement liées.
 
-
-
+```{r message=FALSE, warning=FALSE}
+attach(data_train)
+plot(table(Attrition,Gender))
+chisq.test(table(Attrition,Gender))
+```
+Finalement le test chi 2 nous montre l'indépendance, démontrant que notre modèle n'est pas parfait.
 
 
 
