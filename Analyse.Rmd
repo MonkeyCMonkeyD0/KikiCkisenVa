@@ -60,7 +60,7 @@ plot(res.pca, choix = "var", cex = 0.7)
 ```
 On voit apparaitre un effet taille. Pour contrer cela nous allons transformer les données en appliquant
 
-\subsection{Equilibrage des Donnees}
+\subsection{Équilibrage des Données}
 ```{r}
 data_train_log <- log(data_train_num[,-16])
 data_train_log[data_train_log == -Inf] <- 0
@@ -76,7 +76,7 @@ plot(res.pca.log, choix = "ind", habillage = 16, select = FALSE, unselect = 0)
 plot(res.pca.log, choix = "var", cex = 0.7)
 ```
 
-\subsection
+\subsection{Contribution et représentation des données}
 ```{r}
 plot(res.pca.log, select="cos2 0.82", choix="ind", habillage = 16)
 plot(res.pca.log, select="contrib 5", choix="ind", habillage = 16)
