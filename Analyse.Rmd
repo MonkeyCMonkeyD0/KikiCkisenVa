@@ -82,8 +82,8 @@ plot(res.pca.log, select="cos2 0.82", choix="ind", habillage = 16)
 plot(res.pca.log, select="contrib 5", choix="ind", habillage = 16)
 ```
 ```{r}
-summary(res$eig)
-barplot(res$eig[,2])
+summary(res.pca.log$eig)
+barplot(res.pca.log$eig[,2])
 ```
 L'inertie de chaque composante en pourcentage. On remarque que les 2 premiers suffisent car les autres apportent moins de 10%...
 

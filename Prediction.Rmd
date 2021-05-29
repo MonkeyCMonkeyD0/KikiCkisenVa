@@ -44,6 +44,7 @@ data_test <- fact.data(data_test)
 dim(data_test)
 head(data_test)
 ```
+\subsection{Recupération des variables numériques}
 ```{r warning=FALSE}
 data_train_num <- data_train[, unlist(lapply(data_train, is.numeric))]
 data_train_num[16] <- data_train["Attrition"]
@@ -56,34 +57,51 @@ dim(data_test_num)
 head(data_test_num)
 ```
 
-
-
-\section{AFD - LDA}
-```{r message=FALSE}
-library(MASS)
-
-a=seq(min(), max(X), length=100)
-b=seq(min(X), max(X), length=100)
-grille=NULL
-for (i in a) {grille=rbind(grille, cbind(i,b)) }
-
-res.afd.lda = lda(data_train_num[-16], grouping = data_train_num$Attrition)
-pred_grille_lda = predict(res.afd.lda, data.frame(grille))$class
-plot(grille, col = pred_grille_lda, cex = 0.2, main = "LDA")
-points(res.afd.lda$means, pch = 3, col = 1:2, lwd = 4)
-points(X, pch = as.numeric(Y), col = as.numeric(Y), lwd = 2)
-
-
-
-#res.qda = qda(data_train_num[-16], grouping = data_train_num$Attrition)
-#res.qda
-
-#pred.qda = predict(res.qda, data_test_num)
-#pred.qda
+\subsection{Récupération des coordonnées}
+```{r warning=FALSE}
+data_train_log <- log(data_train_num[-16])
+data_train_log[data_train_log == -Inf] <- 0
+data_train_log <- t(scale(t(data_train_log)))
+data_train_log <- as.data.frame(data_train_log)
+data_train_log[16] <- data_train["Attrition"]
+coord_data_train <- PCA(data_train_log, scale.unit = TRUE, graph = FALSE, quali.sup = 16)$ind$coord[,1:2]
+plot(coord_data_train[,1], coord_data_train[,2], col = data_train$Attrition, xlab = "Axe 1", ylab = "Axe 2")
+legend('topright', legend = levels(data_train$Attrition), col = 1:2, cex = 0.8, pch = 1)
+```
+```{r message=FALSE, warning=FALSE}
+data_test_log <- log(data_test_num)
+data_test_log[data_test_log == -Inf] <- 0
+data_test_log <- t(scale(t(data_test_log)))
+data_test_log <- as.data.frame(data_test_log)
+coord_data_test <- PCA(data_test_log, scale.unit = TRUE, graph = FALSE)$ind$coord[,1:2]
+plot(coord_data_test[,1], coord_data_test[,2], xlab = "Axe 1", ylab = "Axe 2")
 ```
 
+\section{Classification}
+```{r}
+library(klaR)
+partimat(coord_data_train, grouping = data_train_num$Attrition, method = "lda")
+partimat(coord_data_train, grouping = data_train_num$Attrition, method = "qda")
+```
 
+\section{Prediction}
+```{r message=FALSE, warning=FALSE}
+res.qda = qda(data_train_num[-16], grouping = data_train_num$Attrition)
+res.qda
+pred.qda = predict(res.qda, data_train_num[-16])$class
+table(data_train_num$Attrition, pred.qda)
+```
+Sur les Yes prédits on a plus d'erreurs que de cas juste alors que ce n'est pas le cas avec les prédiction sur No.
 
+\section{Équilibrage de la répartition des données}
+```{r}
+library(DMwR)
+table(data_train_num$Attrition)
+data_train_bal <- SMOTE(Attrition ~ ., data_train_num)
+table(data_train_bal$Attrition)
+```
+
+\section{Détermination du meilleur modèle}
 
 
 
