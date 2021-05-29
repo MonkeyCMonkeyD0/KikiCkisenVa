@@ -92,7 +92,7 @@ usefull_col <- (res$var$contrib[,1] > median(res$var$contrib[,1])) | (res$var$co
 usefull_col
 ```
 
-\section{AFC}
+\section{AFC-MCA}
 ```{r}
 data_train_fact <- data_train[, unlist(lapply(data_train, is.factor))]
 dim(data_train_fact)
