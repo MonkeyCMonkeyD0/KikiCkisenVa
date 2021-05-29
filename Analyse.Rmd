@@ -85,7 +85,7 @@ plot(res.pca.log, select="contrib 5", choix="ind", habillage = 16)
 summary(res$eig)
 barplot(res$eig[,2])
 ```
-L'inertie de chaque composante en pourcentage. On remarque que les 2 premiers suffisent car les autres apportent moins de 10%...
+L'inertie de chaque composante en pourcentage. On remarque que les 2 premiers axes suffisent car les autres apportent moins de 10%...
 
 ```{r message=FALSE, warning=FALSE}
 usefull_col <- (res$var$contrib[,1] > median(res$var$contrib[,1])) | (res$var$contrib[,2] > median(res$var$contrib[,2]))
