@@ -1,6 +1,8 @@
 ---
 title: "Projet - Analyse de Données"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Projet KikiCkisenVa - Analyse
@@ -88,7 +90,7 @@ barplot(res.pca.log$eig[,2])
 L'inertie de chaque composante en pourcentage. On remarque que les 2 premiers axes suffisent car les autres apportent moins de 10%...
 
 ```{r message=FALSE, warning=FALSE}
-usefull_col <- (res$var$contrib[,1] > median(res$var$contrib[,1])) | (res$var$contrib[,2] > median(res$var$contrib[,2]))
+usefull_col <- (res.pca.log$var$contrib[,1] > median(res.pca.log$var$contrib[,1])) | (res.pca.log$var$contrib[,2] > median(res.pca.log$var$contrib[,2]))
 usefull_col
 ```
 
@@ -101,7 +103,7 @@ head(data_train_fact)
 ```{r warning=FALSE}
 library(FactoMineR)
 res.mca = MCA(data_train_fact, graph = FALSE)
-barplot(res$eig[,2])
+barplot(res.mca$eig[,2])
 plot(res.mca, choix = "var", cex = 0.7)
 plot(res.mca, choix = "var", xlim = c(0, 0.05), ylim = c(0, 0.05), cex = 0.5)
 ```
