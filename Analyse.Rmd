@@ -49,14 +49,14 @@ head(data_train_log)
 ```
 ```{r}
 res <- PCA(data_train_log, scale.unit = TRUE, graph = FALSE, quali.sup = 25)
-plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
+plot(res, choix = "ind", habillage = 25, select = FALSE, unselect = 0)
 plot(res, choix = "var", cex = 0.7)
 ```
 
 \subsection
 ```{r}
-plot(res, select="cos2 0.7", choix="ind", habillage = 26)
-plot(res, select="contrib 5", choix="ind", habillage = 26)
+plot(res, select="cos2 0.7", choix="ind", habillage = 25)
+plot(res, select="contrib 5", choix="ind", habillage = 25)
 ```
 ```{r}
 res$eig
