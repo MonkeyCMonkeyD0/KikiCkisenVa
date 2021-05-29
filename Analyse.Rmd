@@ -14,14 +14,14 @@ head(data_train)
 ```
 ```{r}
 data_train_num <- data_train[, unlist(lapply(data_train, is.numeric))]
-data_train_num[26] <- data_train["Attrition"]
+data_train_num[25] <- data_train["Attrition"]
 dim(data_train_num)
 head(data_train_num)
 ```
 
 \section{Stats descriptives}
 ```{r message=FALSE, warning=FALSE}
-chisq.test(data_train_num[-26])
+chisq.test(data_train_num[-25])
 ```
 Toutes les variables ne semblent pas indépentantes entre elles.
 
@@ -31,24 +31,24 @@ Toutes les variables ne semblent pas indépentantes entre elles.
 \section{ACP}
 ```{r}
 library(FactoMineR)
-res <- PCA(data_train_num, scale.unit = TRUE, graph = FALSE, quali.sup = 26)
-plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
+res <- PCA(data_train_num, scale.unit = TRUE, graph = FALSE, quali.sup = 25)
+plot(res, choix = "ind", habillage = 25, select = FALSE, unselect = 0)
 plot(res, choix = "var", cex = 0.8)
 ```
 On voit apparaitre un effet taille. Pour contrer cela nous allons transformer les données en appliquant
 
 \subsection{Equilibrage des Donnees}
 ```{r}
-data_train_log <- log(data_train_num[,-26])
+data_train_log <- log(data_train_num[,-25])
 data_train_log[data_train_log == -Inf] <- 0
 data_train_log <- t(scale(t(data_train_log)))
 data_train_log <- as.data.frame(data_train_log)
-data_train_log[26] <- data_train["Attrition"]
+data_train_log[25] <- data_train["Attrition"]
 
 head(data_train_log)
 ```
 ```{r}
-res <- PCA(data_train_log, scale.unit = TRUE, graph = FALSE, quali.sup = 26)
+res <- PCA(data_train_log, scale.unit = TRUE, graph = FALSE, quali.sup = 25)
 plot(res, choix = "ind", habillage = 26, select = FALSE, unselect = 0)
 plot(res, choix = "var", cex = 0.7)
 ```
