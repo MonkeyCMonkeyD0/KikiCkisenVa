@@ -1,4 +1,5 @@
 https://www.kaggle.com/colearninglounge/employee-attrition?select=employee_attrition_train.csv  
+On a enlevé CountEmployee, standardHours et over18...  
 AGE Numerical Value  
 ATTRITION Employee leaving the company (0=no, 1=yes)  
 BUSINESS TRAVEL (1=No Travel, 2=Travel Frequently, 3=Travel Rarely)  
