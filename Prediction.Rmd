@@ -1,6 +1,12 @@
 ---
 title: "Projet - Analyse de Données"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+editor_options: 
+  chunk_output_type: inline
 ---
 
 # Projet KikiCkisenVa - Prédiction
@@ -59,6 +65,7 @@ head(data_test_num)
 
 \subsection{Récupération des coordonnées}
 ```{r warning=FALSE}
+library(FactoMineR)
 data_train_log <- log(data_train_num[-16])
 data_train_log[data_train_log == -Inf] <- 0
 data_train_log <- t(scale(t(data_train_log)))
@@ -78,13 +85,37 @@ plot(coord_data_test[,1], coord_data_test[,2], xlab = "Axe 1", ylab = "Axe 2")
 ```
 
 \section{Classification}
+\subsection{LDA - QDA}
 ```{r}
 library(klaR)
 partimat(coord_data_train, grouping = data_train_num$Attrition, method = "lda")
 partimat(coord_data_train, grouping = data_train_num$Attrition, method = "qda")
 ```
 
-\section{Prediction}
+\subsection{KMeans}
+```{r message=FALSE, warning=FALSE}
+res.kmeans <- kmeans(coord_data_train, centers = 2, nstart = 1000)
+plot(coord_data_train, col = res.kmeans$cluster, pch = as.numeric(data_train$Attrition))
+plot(table(res.kmeans$cluster, data_train$Attrition))
+```
+
+\subsection{CAH}
+```{r message=FALSE, warning=FALSE}
+## Modèle
+cah.ward <- hclust(dist(coord_data_train), method = "ward.D2")
+## Selection de 2 cluster (choix binaire)
+plot(cah.ward, hang = -1)
+rect.hclust(cah.ward, 2)
+res.cah <- cutree(cah.ward, 2)
+
+plot(coord_data_train, col = res.cah, pch = as.numeric(data_train$Attrition))
+plot(table(res.cah, data_train$Attrition))
+```
+
+
+
+
+\section{Équilibrage de la répartition des données}
 ```{r message=FALSE, warning=FALSE}
 res.qda = qda(data_train_num[-16], grouping = data_train_num$Attrition)
 res.qda
@@ -93,18 +124,183 @@ table(data_train_num$Attrition, pred.qda)
 ```
 Sur les Yes prédits on a plus d'erreurs que de cas juste alors que ce n'est pas le cas avec les prédiction sur No.
 
-\section{Équilibrage de la répartition des données}
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(DMwR)
 table(data_train_num$Attrition)
 data_train_bal <- SMOTE(Attrition ~ ., data_train_num)
 table(data_train_bal$Attrition)
 ```
 
-\section{Détermination du meilleur modèle}
+\section{Détermination du meilleur modèle de Prédiction}
+\subsection{LDA - QDA}
+```{r}
+library(MASS)
+
+## Modèle
+res.lda <- lda(data_train_bal[-16], grouping = data_train_bal$Attrition)
+res.qda <- qda(data_train_bal[-16], grouping = data_train_bal$Attrition)
+```
+```{r}
+## Prédiction
+pred.lda <- predict(res.lda, newdata = data_train_bal[-16])
+pred.qda <- predict(res.qda, newdata = data_train_bal[-16])
+```
+```{r}
+## Table de confusion
+conf.lda <- table(pred.lda$class, data_train_bal$Attrition)
+accuracy.lda <- (conf.lda[1,1] + conf.lda[2,2]) / sum(conf.lda)
+plot(conf.lda)
+conf.qda <- table(pred.qda$class, data_train_bal$Attrition)
+accuracy.qda <- (conf.qda[1,1] + conf.qda[2,2]) / sum(conf.qda)
+plot(conf.qda)
+```
+```{r message=FALSE, warning=FALSE}
+## courbe ROC
+library(pROC)
+ROC.lda <- roc(data_train_bal$Attrition, pred.lda$posterior[,2])
+ROC.qda <- roc(data_train_bal$Attrition, pred.qda$posterior[,2])
+plot(ROC.lda, print.auc=TRUE, print.auc.y = 0.5, col = 1)
+plot(ROC.qda, add = TRUE, print.auc=TRUE,  print.auc.y = 0.45, col = 2)
+legend("bottomright", lwd = 1, col = 1:2, c("LDA", "QDA"))
+```
+
+\subsection{LDA avec selection de modèle}
+```{r message=FALSE, warning=FALSE}
+library(klaR)
+
+## Modèle
+stepwise.lda = stepclass(data_train_bal[-16], grouping = data_train_bal$Attrition, method = "lda", direction = "backward")
+stepwise.lda
+res.stepwise.lda = lda(stepwise.lda$formula, data = data_train_bal[-16])
+```
+```{r}
+## Prédiction
+pred.stepwise.lda <- predict(res.stepwise.lda, newdata = data_train_bal[-16])
+```
+```{r}
+## Table de confusion
+conf.stepwise.lda <- table(pred.stepwise.lda$class, data_train_bal$Attrition)
+accuracy.stepwise.lda <- (conf.stepwise.lda[1,1] + conf.stepwise.lda[2,2]) / sum(conf.stepwise.lda)
+plot(conf.stepwise.lda)
+```
+```{r message=FALSE, warning=FALSE}
+## courbe ROC
+ROC.stepwise.lda <- roc(data_train_bal$Attrition, pred.stepwise.lda$posterior[,2])
+plot(ROC.stepwise.lda, print.auc=TRUE, print.auc.y = 0.5)
+legend("bottomright", lwd = 1, col = 1, "LDA stepwise")
+```
+
+\subsection{CART}
+```{r message=FALSE, warning=FALSE}
+library(rpart)
+library(rpart.plot)
+
+## Modèle
+arbre.cart = rpart(data_train_bal$Attrition ~ ., data = data_train_bal[-16], control = rpart.control(minsplit = 5, cp = 0))
+plotcp(arbre.cart)
+```
+```{r}
+## Optimisation de l'arbre
+cp.opt <- arbre.cart$cptable[which.min(arbre.cart$cptable[, "xerror"]), "CP"]
+arbre.opt <- prune(arbre.cart, cp = cp.opt)
+rpart.plot(arbre.opt, type=4, digits=2)
+```
+```{r message=FALSE, warning=FALSE}
+## Prédiction
+pred.cart.class <- predict(arbre.opt, newdata = data_train_bal[-16], type = "class")
+pred.cart.prob <- predict(arbre.opt, newdata = data_train_bal[-16], type = "prob")[,2]
+```
+```{r message=FALSE, warning=FALSE}
+## Table de confusion
+conf.cart <- table(pred.cart.class, data_train_bal$Attrition)
+accuracy.cart <- (conf.cart[1,1] + conf.cart[2,2]) / sum(conf.cart)
+plot(conf.cart)
+```
+```{r message=FALSE, warning=FALSE}
+## courbe ROC
+ROC.cart <- roc(data_train_bal$Attrition, pred.cart.prob)
+plot(ROC.cart, print.auc=TRUE, print.auc.y = 0.5, col = 1)
+legend("bottomright", lwd = 1, col = 1, "CART")
+```
+
+\subsection{Random Forest}
+```{r message=FALSE, warning=FALSE}
+library(randomForest)
+
+## Modèle
+res.RF <- randomForest(data_train_bal$Attrition ~ ., data_train_bal[-16])
+res.RF
+```
+```{r}
+## Prédiction
+pred.RF.class <- predict(res.RF, newdata = data_train_bal[-16], type="class")
+pred.RF.prob <- predict(res.RF, newdata = data_train_bal[-16], type = "prob")[,2]
+```
+```{r}
+## Table de confusion
+conf.RF <- table(pred.RF.class, data_train_bal$Attrition)
+accuracy.RF <- (conf.RF[1,1] + conf.RF[2,2]) / sum(conf.RF)
+plot(conf.RF)
+```
+```{r message=FALSE, warning=FALSE}
+## courbe ROC
+ROC.RF <- roc(data_train_bal$Attrition, pred.RF.prob)
+plot(ROC.RF, print.auc=TRUE, print.auc.y = 0.5, col = 1)
+legend("bottomright", lwd = 1, col = 1, "Random Forest")
+```
+
+\subsection{Regression Logistique Lasso}
+```{r message=FALSE, warning=FALSE}
+library(glmnet)
+
+## Modèle
+res.Lasso <- glmnet(as.matrix(data_train_bal[-16]), data_train_bal$Attrition, family='binomial')  
+cv.Lasso <- cv.glmnet(as.matrix(data_train_bal[-16]), data_train_bal$Attrition, family="binomial", type.measure = "class") 
+plot(cv.Lasso)
+```
+```{r}
+## Prédiction
+pred.lasso.class <- predict(cv.Lasso, newx = as.matrix(data_train_bal[-16]), s = 'lambda.min', type = "class")
+pred.lasso.prob <- predict(cv.Lasso, newx = as.matrix(data_train_bal[-16]), s = 'lambda.min', type = "response")[,1]
+```
+```{r}
+## Table de confusion
+conf.lasso <- table(pred.lasso.class, data_train_bal$Attrition)
+accuracy.lasso <- (conf.lasso[1,1] + conf.lasso[2,2]) / sum(conf.lasso)
+plot(conf.lasso)
+```
+```{r message=FALSE, warning=FALSE}
+## courbe ROC
+ROC.lasso <- roc(data_train_bal$Attrition, pred.lasso.prob)
+plot(ROC.lasso, print.auc=TRUE, print.auc.y = 0.5, col = 1)
+legend("bottomright", lwd = 1, col = 1, "Regression Logistique Lasso")
+```
 
 
+\section{Comparaison des méthodes}
+```{r}
+result = matrix(NA, ncol = 6, nrow = 2)
+rownames(result) = c('accuracy', 'AUC')
+colnames(result) = c('LDA', 'QDA',  'LDA stepwise', 'CART', 'Random Forest',  'Reg. Logi. Lasso')
+result[1,] = c(accuracy.lda, accuracy.qda, accuracy.stepwise.lda, accuracy.cart, accuracy.RF, accuracy.lasso)
+result[2,] = c(ROC.lda$auc, ROC.qda$auc, ROC.stepwise.lda$auc, ROC.cart$auc, ROC.RF$auc,  ROC.lasso$auc)
+result
+apply(result, 1, which.max )
 
+plot(ROC.lda, xlim = c(1,0))
+plot(ROC.qda, add = TRUE, col = 2)
+plot(ROC.stepwise.lda, add = TRUE, col = 3)
+plot(ROC.cart, add = TRUE, col = 4)
+plot(ROC.RF, add = TRUE, col = 5)
+plot(ROC.lasso, add = TRUE, col = 6)
+legend('bottomright', col = 1:6, paste(colnames(result)),  lwd = 1)
+```
+La meilleure méthode de prédiction en tout point est le random Forest.
 
+\section{Resolution de notre problème avec Random Forest}
+```{r message=FALSE, warning=FALSE}
+pred.Attrition <- predict(res.RF, newdata = data_test_num, type="class")
 
-
+data_test_pred <- data.frame(pred.Attrition, data_test)
+write.csv(data_test_pred, file = "prediction.csv", quote = FALSE, sep = ',')
+```
