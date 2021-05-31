@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 # Projet KikiCkisenVa - Prédiction
@@ -86,7 +86,7 @@ plot(coord_data_test[,1], coord_data_test[,2], xlab = "Axe 1", ylab = "Axe 2")
 
 \section{Classification}
 \subsection{LDA - QDA}
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(klaR)
 partimat(coord_data_train, grouping = data_train_num$Attrition, method = "lda")
 partimat(coord_data_train, grouping = data_train_num$Attrition, method = "qda")
@@ -94,7 +94,7 @@ partimat(coord_data_train, grouping = data_train_num$Attrition, method = "qda")
 
 \subsection{KMeans}
 ```{r message=FALSE, warning=FALSE}
-res.kmeans <- kmeans(coord_data_train, centers = 2, nstart = 1000)
+res.kmeans <- kmeans(data_train_num[-16], centers = 2, nstart = 1000)
 plot(coord_data_train, col = res.kmeans$cluster, pch = as.numeric(data_train$Attrition))
 plot(table(res.kmeans$cluster, data_train$Attrition))
 ```
@@ -102,7 +102,7 @@ plot(table(res.kmeans$cluster, data_train$Attrition))
 \subsection{CAH}
 ```{r message=FALSE, warning=FALSE}
 ## Modèle
-cah.ward <- hclust(dist(coord_data_train), method = "ward.D2")
+cah.ward <- hclust(dist(data_train_num), method = "ward.D2")
 ## Selection de 2 cluster (choix binaire)
 plot(cah.ward, hang = -1)
 rect.hclust(cah.ward, 2)
@@ -295,11 +295,14 @@ plot(ROC.RF, add = TRUE, col = 5)
 plot(ROC.lasso, add = TRUE, col = 6)
 legend('bottomright', col = 1:6, paste(colnames(result)),  lwd = 1)
 ```
+
 La meilleure méthode de prédiction en tout point est le random Forest.
 
 \section{Resolution de notre problème avec Random Forest}
 ```{r message=FALSE, warning=FALSE}
 pred.Attrition <- predict(res.RF, newdata = data_test_num, type="class")
+
+plot(coord_data_test, col = pred.Attrition)
 
 data_test_pred <- data.frame(pred.Attrition, data_test)
 write.csv(data_test_pred, file = "prediction.csv", quote = FALSE, sep = ',')
